@@ -6,6 +6,9 @@
 
 #include <stdio.h>
 #include <math.h>
+//#include "Filter.h"
+#include "Grid.h"
+#include "ReadWrite.h"
 
 cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
 
@@ -20,39 +23,50 @@ __global__ void addKernel(int *c, const int *a, const int *b)
 
 int main()
 {
-    //const int arraySize = 5;
-    int *a = new int[N*N];
-	int *b = new int[N*N];
-	int *c = new int[N*N];
-	int arraySize = N*N;
+	double t1, t2;
+	Grid grid_s = Grid(5, 5);
+	Grid grid_p = Grid(5, 5);
 
-	for (int x = 0; x < N*N; ++x)
-	{
-		a[x] = 1;
-		b[x] = 2;
-		c[x] = 0;
-	}
+	t1 = omp_get_wtime();
+	ReadWrite::LoadData_s(grid_s);
+	t2 = omp_get_wtime();
+	printf("Time for serial binning: %12.3f sec, checksum=%d (must be 100000000).\n", t2 - t1, grid_s.Count());
+	grid_s.Print();
+	t1 = 0.0;
+	t2 = 0.0;
+	t1 = omp_get_wtime();
+	ReadWrite::LoadData_omp(grid_p);
+	t2 = omp_get_wtime();
+	printf("Time for serial omp: %12.3f sec, checksum=%d (must be 100000000).\n", t2 - t1, grid_p.Count());
+	grid_p.Print();
+    //const int arraySize = 5;
+    //int *a = new int[N*N];
+	//int *b = new int[N*N];
+	//int *c = new int[N*N];
+	//int arraySize = N*N;
+
+	//for (int x = 0; x < N*N; ++x)
+	//{
+	//	a[x] = 1;
+	//	b[x] = 0;
+	//	c[x] = 0;
+	//}
 
     // Add vectors in parallel.
-    cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addWithCuda failed!");
-        return 1;
-    }
-	for (int i = 0; i < 16; ++i)
-	{
-		for (int j = 0; j < 32;++j)
-			printf("[%d] {%d,%d,%d,%d,%d} + {%d,%d,%d,%d,%d} = {%d,%d,%d,%d,%d}\n",
-				i * 32 + j, a[0], a[1], a[2], a[3], a[4], b[0], b[1], b[2], b[3], b[4], c[0], c[1], c[2], c[3], c[4]);
-	}
+    //cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
+    //if (cudaStatus != cudaSuccess) {
+    //    fprintf(stderr, "addWithCuda failed!");
+     //   return 1;
+   // }
+	
 
     // cudaDeviceReset must be called before exiting in order for profiling and
     // tracing tools such as Nsight and Visual Profiler to show complete traces.
-    cudaStatus = cudaDeviceReset();
+    /*cudaStatus = cudaDeviceReset();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaDeviceReset failed!");
         return 1;
-    }
+    }*/
 
     return 0;
 }
@@ -105,7 +119,7 @@ cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size)
     }
 
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
-	dim3 dimGrid((int)ceil(N / dimBlock.x), (int)ceil(N / dimBlock.y));
+	dim3 dimGrid((int)ceil(N / (float)dimBlock.x), (int)ceil(N / (float)dimBlock.y));
     // Launch a kernel on the GPU with one thread for each element.
     addKernel<<<dimGrid, dimBlock>>>(dev_c, dev_a, dev_b);
 
