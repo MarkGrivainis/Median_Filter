@@ -9,6 +9,8 @@
 //#include "Filter.h"
 #include "Grid.h"
 #include "ReadWrite.h"
+#include "Filter.h"
+
 
 cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
 
@@ -21,24 +23,44 @@ __global__ void addKernel(int *c, const int *a, const int *b)
 		c[i] = a[i] + b[i];
 }
 
+
+
 int main()
 {
+	char* name = "Points_[1.0e+08]_Noise_[030]_Normal.bin";
 	double t1, t2;
-	Grid grid_s = Grid(5, 5);
-	Grid grid_p = Grid(5, 5);
-
+	//Grid grid_s = Grid(4096, 4096);
+	Grid grid_p = Grid(100, 100);
+	//Grid grid_p_b = Grid(4096, 4096);
+	printf("OpenMP threads: %d\n", omp_get_max_threads());
+	//t1 = omp_get_wtime();
+	printf("Binning file");
+	ReadWrite::LoadData_omp(grid_p, name);
+	//t2 = omp_get_wtime();
+	//printf("Time for omp binning: %12.3f sec, checksum=%d (must be 100000000).\n", t2 - t1, grid_p.Count());
+	//t1 = omp_get_wtime();
+	//ReadWrite::LoadData_s(grid_s, name);
+	//ReadWrite::LoadData_omp_buffer(grid_p_b, name);
+	//t2 = omp_get_wtime();
+	//printf("Time for serial binning: %12.3f sec, checksum=%d (must be 100000000).\n", t2 - t1, grid_s.Count());
+	//grid_s.Print();
+	//t1 = 0.0;
+	//t2 = 0.0;	
+	printf("Writing unfiltered");
+	ReadWrite::WriteData(grid_p, "unfiltered.csv");
+	
+	
+	
+	//grid_p.Print();
+	printf("filtering");
 	t1 = omp_get_wtime();
-	ReadWrite::LoadData_s(grid_s);
+	Filter::m_Filter_extended(grid_p, 3);
 	t2 = omp_get_wtime();
-	printf("Time for serial binning: %12.3f sec, checksum=%d (must be 100000000).\n", t2 - t1, grid_s.Count());
-	grid_s.Print();
-	t1 = 0.0;
-	t2 = 0.0;
-	t1 = omp_get_wtime();
-	ReadWrite::LoadData_omp(grid_p);
-	t2 = omp_get_wtime();
-	printf("Time for serial omp: %12.3f sec, checksum=%d (must be 100000000).\n", t2 - t1, grid_p.Count());
-	grid_p.Print();
+	printf("Time for serial Filtering: %12.3f sec.\n", t2 - t1);
+	printf("writing filtered\n");
+	ReadWrite::WriteData(grid_p, "filtered.csv");
+	//grid_p.Print();
+	//grid_p_b.Print();
     //const int arraySize = 5;
     //int *a = new int[N*N];
 	//int *b = new int[N*N];
