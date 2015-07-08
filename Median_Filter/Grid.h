@@ -1,16 +1,26 @@
 #pragma once
+#include <iostream>
 class Grid
 {
 private:
 	
 public:
-	unsigned int *grid;
+	int *grid;
+	int _size;
 	int cols, rows;
 	Grid(int rows, int cols);
+	Grid(const Grid &other) :rows(other.rows), cols(other.cols)
+	{
+		grid = new int[other._size];
+		_size = other._size;
+		memcpy(grid, other.grid, sizeof(int) * _size);
+	}
 	~Grid();
 	void Print();
 	int Count();
 	void Clear();
 	void Add(float x, float y);
+	Grid Pad(int radius);
+	void set(int);
 };
 

@@ -76,7 +76,7 @@ public:
 		else
 			printf("File could not be opened\n");
 
-		std::cout << a << std::endl;
+		std::cout << "Reads : " << a << std::endl;
 	}
 	static void LoadData_omp(Grid &grid, char* name)
 	{
@@ -104,7 +104,6 @@ public:
 			{
 				std::cout << "fseek failed" << std::endl;
 			}
-			
 			while (true)
 			{
 				r_t1 = omp_get_wtime();
@@ -118,20 +117,19 @@ public:
 					//Grid temp = Grid(grid.rows, grid.cols);
 					//temp.Clear();
 				b_t1 = omp_get_wtime();
-	#pragma omp parallel for schedule(static,4096) num_threads(8)
+	#pragma omp parallel for schedule(static)
 				for (int i = 0; i < numread; i += 2)
 				{
 					//printf("OpenMP threads: %d\n", omp_get_num_threads());
-					int x_i = (int)floor(list[i] * grid.cols);
-					int y_i = (int)floor(list[i + 1] * grid.rows);
-
+					int x_i = (int)(list[i] * grid.cols);
+					int y_i = (int)(list[i + 1] * grid.rows);
+					
 					if (x_i == grid.cols)
 						x_i--;
 					if (y_i == grid.rows)
 						y_i--;
 					int index = y_i * grid.cols + x_i;
-					//#pragma omp critical
-					//++temp.grid[y_i][x_i];
+					////#pragma omp critical
 					#pragma omp atomic
 					++grid.grid[index];
 				}
@@ -155,7 +153,7 @@ public:
 		else
 			printf("File could not be opened\n");
 
-		std::cout << a << std::endl;
+		std::cout << "Reads : " << a << std::endl;
 	}
 	static void LoadData_omp_buffer(Grid &grid, char* name)
 	{
@@ -237,7 +235,7 @@ public:
 		//else
 		//	printf("File could not be opened\n");
 
-		std::cout << a << std::endl;
+		std::cout << "Reads : " << a << std::endl;
 	}
 	static void WriteData(Grid &grid, char* name)
 	{

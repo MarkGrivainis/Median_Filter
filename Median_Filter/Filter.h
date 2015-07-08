@@ -23,32 +23,14 @@ public:
 		}
 	}
 	void m_Filter_zero(Grid &grid, int radius);
-	static void m_Filter_extended(Grid &grid, int size)
+	static void m_Filter_fullsort(Grid &padded, Grid &image, int radius)
 	{
-		int radius = (int)(size - 1) / 2;
-			Grid bordered = Grid(grid.rows + (radius * 2), grid.cols + (radius * 2));
-			bordered.Clear();
-			for (int y = 0; y < grid.rows; ++y)
-			{
-				memcpy(bordered.grid + (y + radius) * bordered.cols + radius, grid.grid + y * grid.cols, grid.cols*sizeof(size_t));
-				for (int x = 0; x < radius; ++x)
-				{
-					bordered.grid[(y + radius) * bordered.cols + x] = grid.grid[y * grid.cols];
-					bordered.grid[(y + radius) * bordered.cols + grid.cols+radius+x] = grid.grid[y * grid.cols + grid.cols-1];
-				}
-			}
-			for (int y = 0; y < radius; ++y)
-			{
-				memcpy(bordered.grid + y * bordered.cols, bordered.grid + radius * bordered.cols, bordered.cols*sizeof(size_t));
-				memcpy(bordered.grid + (bordered.rows - 1 - y) * bordered.cols, bordered.grid + (bordered.rows - 1 - radius ) * bordered.cols, bordered.cols*sizeof(size_t));
-			}
-			//bordered.Print();
-			for (int y = radius; y < grid.rows + radius; ++y)
+			for (int y = radius; y < image.rows + radius; ++y)
 			{
 				int top = std::max(y - radius, 0);
 				int bottom = std::min(y + radius, 4);
 		
-				for (int x = radius; x < grid.cols + radius; ++x)
+				for (int x = radius; x < image.cols + radius; ++x)
 				{
 					int left = std::max(x - radius, 0);
 					int right = std::min(x + radius, 4);
@@ -57,13 +39,52 @@ public:
 					{
 						for (int u = x - radius; u <= x + radius; ++u)
 						{
-							values.push_back(bordered.grid[v * bordered.cols + u]);
+							values.push_back(padded.grid[v * padded.cols + u]);
 						}
 					}
 					int med = median(values);
-					grid.grid[(y - radius) * grid.cols + (x - radius)] = med;
+					image.grid[(y - radius) * image.cols + (x - radius)] = med;
 				}
 			}
 	}
-};
+	static void m_Filter_half(Grid &padded, Grid &image, const int size)
+	{
+		int radius = (int)(size - 1) / 2;
+		int windowSize = size*size;
+		int halfWindow = ((windowSize + 1) / 2);
+		for (int y = radius; y < image.rows + radius; ++y)
+		{
+			int top = std::max(y - radius, 0);
+			int bottom = std::min(y + radius, 4);
 
+			for (int x = radius; x < image.cols + radius; ++x)
+			{
+				int left = std::max(x - radius, 0);
+				int right = std::min(x + radius, 4);
+				int k = 0;
+				int *window = new int[windowSize];
+				for (int v = y - radius; v <= y + radius; ++v)
+				{
+					for (int u = x - radius; u <= x + radius; ++u)
+					{
+						window[k++] = padded.grid[v * padded.cols + u];
+					}
+				}
+				for (int j = 0; j < halfWindow; ++j)
+				{
+					//   Find position of minimum element
+					int min = j;
+					for (int l = j + 1; l < windowSize; ++l)
+						if (window[l] < window[min])
+							min = l;
+					//   Put found minimum element in its place
+					const int temp = window[j];
+					window[j] = window[min];
+					window[min] = temp;
+				}
+				image.grid[(y - radius) * image.cols + (x - radius)] = window[halfWindow-1];
+			}
+		}
+	}
+
+};

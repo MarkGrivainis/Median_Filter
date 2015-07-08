@@ -164,7 +164,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="kernel.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Filter.cpp" />
     <ClCompile Include="Grid.cpp" />
   </ItemGroup>
   <ItemGroup>

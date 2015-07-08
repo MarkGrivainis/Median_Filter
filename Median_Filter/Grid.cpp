@@ -1,13 +1,13 @@
 #include "Grid.h"
-#include <iostream>
+
 
 Grid::Grid(int rows, int cols) :rows(rows), cols(cols)
 {
-	grid = new unsigned int[rows * cols];
+	grid = new int[rows * cols];
+	_size = rows * cols;
 	for (int i = 0; i < rows * cols; i++)
 		grid[i] = 0;
 }
-
 
 Grid::~Grid()
 {
@@ -22,7 +22,7 @@ void Grid::Print()
 	{
 		for (int j = 0; j < cols; ++j)
 		{
-			printf("%d\t", grid[i * cols + j]);
+			printf("%-10d", grid[i * cols + j]);
 			counter += grid[i * cols + j];
 		}
 		printf("\n");
@@ -58,4 +58,30 @@ void Grid::Add(float x, float y )
 	if (y_i == rows)
 		y_i--;
 	grid[y_i * cols + x_i]++;
+}
+Grid Grid::Pad(int radius)
+{
+	Grid bordered = Grid(rows + (radius * 2), cols + (radius * 2));
+	bordered.Clear();
+	for (int y = 0; y < rows; ++y)
+	{
+		memcpy(bordered.grid + (y + radius) * bordered.cols + radius, grid + y * cols, cols*sizeof(size_t));
+		for (int x = 0; x < radius; ++x)
+		{
+			bordered.grid[(y + radius) * bordered.cols + x] = grid[y * cols];
+			bordered.grid[(y + radius) * bordered.cols + cols + radius + x] = grid[y * cols + cols - 1];
+		}
+	}
+	for (int y = 0; y < radius; ++y)
+	{
+		memcpy(bordered.grid + y * bordered.cols, bordered.grid + radius * bordered.cols, bordered.cols*sizeof(size_t));
+		memcpy(bordered.grid + (bordered.rows - 1 - y) * bordered.cols, bordered.grid + (bordered.rows - 1 - radius) * bordered.cols, bordered.cols*sizeof(size_t));
+	}
+	return bordered;
+	
+}
+void Grid::set(int number)
+{
+	for (int i = 0; i < rows * cols; i++)
+		grid[i] = number;
 }
