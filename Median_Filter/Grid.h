@@ -21,6 +21,7 @@ public:
 	void Clear();
 	void Add(float x, float y);
 	Grid Pad(int radius);
+	Grid ZeroPad(int radius);
 	void set(int);
 };
 

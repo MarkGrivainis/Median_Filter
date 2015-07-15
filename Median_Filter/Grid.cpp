@@ -22,7 +22,7 @@ void Grid::Print()
 	{
 		for (int j = 0; j < cols; ++j)
 		{
-			printf("%-10d", grid[i * cols + j]);
+			printf("%-6d", grid[i * cols + j]);
 			counter += grid[i * cols + j];
 		}
 		printf("\n");
@@ -80,8 +80,19 @@ Grid Grid::Pad(int radius)
 	return bordered;
 	
 }
+Grid Grid::ZeroPad(int radius)
+{
+	Grid bordered = Grid(rows + (radius * 2), cols + (radius * 2));
+	bordered.Clear();
+	for (int y = 0; y < rows; ++y)
+	{
+		memcpy(bordered.grid + (y + radius) * bordered.cols + radius, grid + y * cols, cols*sizeof(size_t));
+	}
+	return bordered;
+
+}
 void Grid::set(int number)
 {
 	for (int i = 0; i < rows * cols; i++)
-		grid[i] = number;
+		grid[i] = i;
 }
