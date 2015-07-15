@@ -1,0 +1,46 @@
+memcpy is quicker than double for loop for duplicating
+http://www.nvidia.com/content/nvision2008/tech_presentations/Game_Developer_Track/NVISION08-Image_Processing_and_Video_with_CUDA.pdf
+
+size 			serial		omp
+100 000 000	5x5	14.315		10.314
+				13.7		9.537
+				14.251		11.730
+
+				12.942		3.619
+				12.948		3.618
+				13.011		3.678
+				
+
+a a a a a a a a a a a a a a a a 	a a a a a a a a a a a a a a a a
+a a a a a a a a a a a a a a a a		a a a a a a a a a a a a a a a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a 0 1 2 3 4 5 6 7 8 9 0 1 a a		a a 2 / / / / / / / / / / / a a
+a a a a a a a a a a a a a a a a		a a a a a a a a a a a a a a a a
+a a a a a a a a a a a a a a a a		a a a a a a a a a a a a a a a a
+
+a a a a a a a a a a a a a a a a		a a a a a a a a a a a a a a a a
+a a a a a a a a a a a a a a a a		a a a a a a a a a a a a a a a a
+a a 2 2 2 2 2 2 2 2 2 2 2 2 a a		a a 2 / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a / / / / / / / / / / / / a a		a a / / / / / / / / / / / / a a
+a a a a a a a a a a a a a a a a		a a a a a a a a a a a a a a a a
+a a a a a a a a a a a a a a a a		a a a a a a a a a a a a a a a a
