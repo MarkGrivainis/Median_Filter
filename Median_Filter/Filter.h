@@ -83,6 +83,70 @@ public:
 					window[min] = temp;
 				}
 				image.grid[(y - radius) * image.cols + (x - radius)] = window[halfWindow-1];
+				delete[] window;
+			}
+		}
+	}
+
+	static void m_Filter_quickselect(Grid &padded, Grid &image, const int size)
+	{
+		int radius = (int)(size - 1) / 2;
+		int windowSize = size*size;
+		int halfWindow = ((windowSize + 1) / 2);
+		for (int y = radius; y < image.rows + radius; ++y)
+		{
+			int top = std::max(y - radius, 0);
+			int bottom = std::min(y + radius, 4);
+
+			for (int x = radius; x < image.cols + radius; ++x)
+			{
+				int left = std::max(x - radius, 0);
+				int right = std::min(x + radius, 4);
+				int k = 0;
+				int *window = new int[windowSize];
+				for (int v = y - radius; v <= y + radius; ++v)
+				{
+					for (int u = x - radius; u <= x + radius; ++u)
+					{
+						window[k++] = padded.grid[v * padded.cols + u];
+					}
+				}
+				int median = halfWindow - 1;
+				int from = 0, to = windowSize - 1;
+				while (from < to)
+				{
+					int r = from, w = to;
+					int mid = window[(r + w) / 2];
+
+					while (r < w)
+					{
+						if (window[r] >= mid)
+						{
+							int temp = window[w];
+							window[w] = window[r];
+							window[r] = temp;
+							w--;
+						}
+						else
+						{
+							r++;
+						}
+					}
+					if (window[r] > mid)
+					{
+						r--;
+					}
+					if (median <= r)
+					{
+						to = r;
+					}
+					else
+					{
+						from = r + 1;
+					}
+				}
+				image.grid[(y - radius) * image.cols + (x - radius)] = window[median];
+				delete[] window;
 			}
 		}
 	}

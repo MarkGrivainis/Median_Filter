@@ -22,14 +22,29 @@ void Grid::Print()
 	{
 		for (int j = 0; j < cols; ++j)
 		{
-			printf("%-6d", grid[i * cols + j]);
+			printf("%-7d", grid[i * cols + j]);
 			counter += grid[i * cols + j];
 		}
 		printf("\n");
 	}
 	printf("total = %d\n", counter);
 }
-
+void Grid::PrintRange(int x1, int x2, int y1, int y2)
+{
+	printf("from : col: %d - %d\n", x1, x2);
+	printf("from : row: %d - %d\n", y1, y2);
+	//long counter = 0;
+	for (int i = y1; i <= y2; i++)
+	{
+		for (int j = x1; j <= x2; ++j)
+		{
+			printf("%-3d", grid[i * cols + j]);
+			//counter += grid[i * cols + j];
+		}
+		printf("\n");
+	}
+	//printf("total = %d\n", counter);
+}
 int Grid::Count()
 {
 	long counter = 0;

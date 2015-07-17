@@ -17,6 +17,7 @@ public:
 	}
 	~Grid();
 	void Print();
+	void PrintRange(int x1, int x2, int y1, int y2);
 	int Count();
 	void Clear();
 	void Add(float x, float y);

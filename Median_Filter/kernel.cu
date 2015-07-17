@@ -2,13 +2,13 @@
 #define __CUDACC__
 #endif
 
-#define N 128
-#define BLOCK_DIM 4
+#define N 1024
+#define BLOCK_DIM 8
 #define T 32
 
 #define BLOCK_W 32
 #define BLOCK_H 32
-#define R 9
+#define R 5
 #define D (R*2+1)
 #define D2 D*D
 #define TILE_W (BLOCK_W - (2*R))
@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <string>
 
 #include "Grid.h"
 #include "ReadWrite.h"
@@ -481,11 +482,14 @@ __global__ void median_Kernel_21x21(int *inputImage, int *outputImage, int width
 
 	int y = blockIdx.y*TILE_H + threadIdx.y - R;
 
-	int a = blockIdx.x*blockDim.x + threadIdx.x;
-	int b = blockIdx.y*blockDim.y + threadIdx.y;
+	int a = x;
+	int b = y;
+
+	int c = blockIdx.x*blockDim.x + threadIdx.x;
+	int d = blockIdx.y*blockDim.y + threadIdx.y;
 
 	//clamp to edge of image
-	if (x < N + 2 && y < N + 2)
+	//if (c < N + 2*R*gridDim.x && d < N + 2*R*gridDim.y)
 	{
 		x = max(0, x);
 
@@ -508,12 +512,12 @@ __global__ void median_Kernel_21x21(int *inputImage, int *outputImage, int width
 		smem[bindex] = inputImage[index];
 
 		__syncthreads();
-		if ((threadIdx.x >= R) && (threadIdx.x < BLOCK_W - R) && (threadIdx.y >= R) && (threadIdx.y < BLOCK_W - R))
+		if ((threadIdx.x >= R) && (threadIdx.x < BLOCK_W - R) && (threadIdx.y >= R) && (threadIdx.y < BLOCK_W - R) && (a < N && b < N))
 
 		{
 
-			if (blockIdx.x*TILE_W + threadIdx.x < N + 2 && blockIdx.y*TILE_H + threadIdx.y < N + 2)
-			{
+			//if (blockIdx.x*TILE_W + threadIdx.x < N + 2 && blockIdx.y*TILE_H + threadIdx.y < N + 2)
+			//{
 				/*printf("[%d][%d] dim[%d][%d] | %-10d : \n%-10d, %-10d, %-10d, %-10d, %-10d, \n%-10d, %-10d, %-10d, %-10d, %-10d, \n%-10d, %-10d, %-10d, %-10d, %-10d, \n%-10d, %-10d, %-10d, %-10d, %-10d, \n%-10d, %-10d, %-10d, %-10d, %-10d,\n", b, a, y, x, inputImage[y*(N)+x],
 					smem[bindex - 2 - BLOCK_W - BLOCK_W], smem[bindex - 1 - BLOCK_W - BLOCK_W], smem[bindex - BLOCK_W - BLOCK_W], smem[bindex + 1 - BLOCK_W - BLOCK_W], smem[bindex + 2 - BLOCK_W - BLOCK_W],
 					smem[bindex - 2 - BLOCK_W], smem[bindex - 1 - BLOCK_W], smem[bindex - BLOCK_W], smem[bindex + 1 - BLOCK_W], smem[bindex + 2 - BLOCK_W],
@@ -523,30 +527,60 @@ __global__ void median_Kernel_21x21(int *inputImage, int *outputImage, int width
 					smem[bindex - 2 + BLOCK_W], smem[bindex - 1 + BLOCK_W], smem[bindex + BLOCK_W], smem[bindex + 1 + BLOCK_W], smem[bindex + 2 + BLOCK_W],
 					smem[bindex - 2 + BLOCK_W + BLOCK_W], smem[bindex - 1 + BLOCK_W + BLOCK_W], smem[bindex + BLOCK_W + BLOCK_W], smem[bindex + 1 + BLOCK_W + BLOCK_W], smem[bindex + 2 + BLOCK_W + BLOCK_W]
 					);*/
+			/*printf("[%d][%d] dim[%d][%d] | %-10d : \n\t\t%-10d, %-10d, %-10d, \n\t\t%-10d, %-10d, %-10d, \n\t\t%-10d, %-10d, %-10d\n", b, a, y, x, inputImage[y*(N)+x],
+				smem[bindex - 1 - BLOCK_W], smem[bindex - BLOCK_W], smem[bindex + 1 - BLOCK_W],
 
-				const int dim = D;
-				int window[dim*dim];
-				for (int j = -R; j <= R; ++j)
-					for (int i = -R; i <= R; ++i)
-						window[(R - j)*dim + R - i] = smem[bindex + j*BLOCK_W + i];
-				for (int j = 0; j < (dim*dim + 1) / 2; ++j)
+				smem[bindex - 1], smem[bindex], smem[bindex + 1], 
+
+				smem[bindex - 1 + BLOCK_W], smem[bindex + BLOCK_W], smem[bindex + 1 + BLOCK_W]
+				);*/
+			const int dim = D;
+			const int k = dim*dim / 2;
+			int a = 0;
+			unsigned int window[dim*dim];
+			
+		
+			for (int h_offset = -R; h_offset <= R; h_offset++)
+				for (int w_offset = -R; w_offset <= R; w_offset++)
+					window[a++] = smem[bindex + h_offset*BLOCK_W + w_offset];
+
+			int from = 0, to = dim*dim - 1;
+			while (from < to)
+			{
+				int r = from, w = to;
+				int mid = window[(r + w) / 2];
+
+				while (r < w)
 				{
-					//   Find position of minimum element
-					int min = j;
-					for (int l = j + 1; l < dim*dim; ++l)
-						if (window[l] < window[min])
-							min = l;
-					//   Put found minimum element in its place
-					const int temp = window[j];
-					window[j] = window[min];
-					window[min] = temp;
+					if (window[r] >= mid)
+					{
+						int temp = window[w];
+						window[w] = window[r];
+						window[r] = temp;
+						w--;
+					}
+					else
+					{
+						r++;
+					}
 				}
-				outputImage[y*width + x] = window[dim*dim / 2];
-				//outputImage[index] = smem[bindex];
+				if (window[r] > mid)
+				{
+					r--;
+				}
+				if (k <= r)
+				{
+					to = r;
+				}
+				else
+				{
+					from = r + 1;
+				}
 			}
+			outputImage[index] = window[k];
 
-			//outputImage[index] = smem[bindex];
 		}
+
 	}
 }
 
@@ -555,45 +589,58 @@ int main()
 	char* name = "Points_[1.0e+08]_Noise_[030]_Normal.bin";
 	double t1, t2;
 	Grid grid_p = Grid(N, N);
-	printf("CONFIGURATION\n------------------\n");
-	printf("Bin dimensions : %d - %d\n", N, N);
-	printf("Filter dimensions : %d - %d\n", D, D);
-	printf("OpenMP threads: %d\n", omp_get_max_threads());
-	printf("Binning file\n");
+
+	printf("\n================== CONFIGURATION ==================\n\n");
+	printf("--- Bin dimensions \t\t: %d x %d\n", N, N);
+	printf("--- Filter dimensions \t\t: %d x %d\n", D, D);
+	printf("--- OpenMP threads \t\t: %d\n", omp_get_max_threads());
+
+	printf("\n=================== OMP BINNING ===================\n\n");
 	ReadWrite::LoadData_omp(grid_p, name);
-	printf("original grid : %d\n", grid_p.Count());
-	//grid_p.Print();
-	printf("padding grid\n");
+
+	printf("\n================= Serial Filtering =================\n\n");
 	t1 = omp_get_wtime();
 	Grid padded = grid_p.Pad(R);
 	t2 = omp_get_wtime();
-	printf("Time for padding: %12.3f sec.\n", t2 - t1);
+	printf("--- Time for padding \t\t: %-12.5f sec.\n", t2 - t1);
 	Grid input = grid_p;
-	//padded.Print();
-	//grid_p.Print();
 	t1 = omp_get_wtime();
-	//Filter::m_Filter_half(padded, grid_p, D);
+	Filter::m_Filter_half(padded, grid_p, D);
 	t2 = omp_get_wtime();
-	//printf("Time for half Filtering: %12.3f sec.\n", t2 - t1);
-	 
+	printf("--- Time for half bubble sort \t: %-12.5f sec.\n", t2 - t1);
+	printf("--- Count after filter \t\t: %d\n", grid_p.Count());
+	t1 = omp_get_wtime();
+	Filter::m_Filter_quickselect(padded, grid_p, D);
+	t2 = omp_get_wtime();
+	printf("--- Time for Quick Select \t: %-12.5f sec.\n", t2 - t1);
+	printf("--- Count after filter \t\t: %d\n", grid_p.Count());
     // Add vectors in parallel.
     //cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
 	Grid cuda = Grid(N, N);
-	printf("filtered serial grid : %d\n", grid_p.Count());
-	//grid_p.Print();
 	//padded.Print();
-	//grid_p.Print();
-	 
-	//cuda.set(0);
+	cuda.set(0);
+	printf("\n================== Cuda Filtering ==================\n\n");
 	cudaError_t cudaStatus = addWithCuda(cuda.grid, input.grid, input.cols*input.rows, cuda.rows*cuda.cols);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "addWithCuda failed!");
         return 1;
     }
-	printf("filtered cuda grid : %d\n", cuda.Count());
-	//cuda.Print();
+	printf("--- Count after filter \t\t: %d\n", cuda.Count());
 
-    // cudaDeviceReset must be called before exiting in order for profiling and
+	printf("\n======================= Grids ======================\n\n");
+	/*input.Print();
+	grid_p.Print();
+	cuda.Print();*/
+	printf("--- Initial Grid ---\n");
+	input.PrintRange(0, 20, 0, 20);
+	printf("---- Serial Grid ---\n");
+	grid_p.PrintRange(0, 20, 0, 20);
+	printf("----- Cuda Grid ----\n");
+	cuda.PrintRange(0, 20, 0, 20);
+	//ReadWrite::WriteData(input, "unfiltered.csv");
+	//ReadWrite::WriteData(grid_p, "serial.csv");
+	//ReadWrite::WriteData(cuda, "cuda.csv");
+     //cudaDeviceReset must be called before exiting in order for profiling and
     // tracing tools such as Nsight and Visual Profiler to show complete traces.
     cudaStatus = cudaDeviceReset();
     if (cudaStatus != cudaSuccess) {
@@ -715,7 +762,7 @@ cudaError_t addWithCuda(int *outputImage, const int *inputImage, unsigned int in
 	cudaEventSynchronize(stop);
 	float milliseconds = 0;
 	cudaEventElapsedTime(&milliseconds, start, stop);
-	printf("cudatime = %12.12f ms\n", milliseconds);
+	printf("--- Cuda Filter Quick Select \t: %-12.5f sec\n", milliseconds/1000);
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 	//t2 = omp_get_wtime();
