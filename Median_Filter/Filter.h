@@ -150,5 +150,102 @@ public:
 			}
 		}
 	}
+	static void m_Filter_quickselect2(Grid &padded, Grid &image, const int size)
+	{
+		int radius = (int)(size - 1) / 2;
+		int windowSize = size*size;
+		for (int y = radius; y < image.rows + radius; ++y)
+		{
+			int top = std::max(y - radius, 0);
+			int bottom = std::min(y + radius, 4);
 
+			for (int x = radius; x < image.cols + radius; ++x)
+			{
+				int left = std::max(x - radius, 0);
+				int right = std::min(x + radius, 4);
+				int k = 0;
+				int *window = new int[windowSize];
+				for (int v = y - radius; v <= y + radius; ++v)
+				{
+					for (int u = x - radius; u <= x + radius; ++u)
+					{
+						window[k++] = padded.grid[v * padded.cols + u];
+					}
+				}
+				int low, high;
+				int median;
+				int middle, ll, hh;
+
+				low = 0; high = windowSize - 1; median = (low + high) / 2;
+				for (;;)
+				{
+					if (high <= low)
+						break;
+					if (high == low + 1)
+					{
+						if (window[low] > window[high])
+						{
+							int temp = window[low];
+							window[low] = window[high];
+							window[high] = temp;
+						}
+						break;
+					}
+
+					middle = (low + high) / 2;
+					if (window[middle] > window[high])
+					{
+						int temp = window[middle];
+						window[middle] = window[high];
+						window[high] = temp;
+					}
+					if (window[low] > window[high])
+					{
+						int temp = window[low];
+						window[low] = window[high];
+						window[high] = temp;
+					}
+					if (window[middle] > window[low])
+					{
+						int temp = window[low];
+						window[low] = window[middle];
+						window[middle] = temp;
+					}
+					int temp = window[low + 1];
+					window[low + 1] = window[middle];
+					window[middle] = temp;
+
+					ll = low + 1;
+					hh = high;
+					for (;;)
+					{
+						do{
+							ll++;
+						} while (window[low] > window[ll]);
+						do
+						{
+							hh--;
+						} while (window[hh] > window[low]);
+						if (hh < ll)
+							break;
+						int temp = window[ll];
+						window[ll] = window[hh];
+						window[hh] = temp;
+					}
+
+					temp = window[low];
+					window[low] = window[hh];
+					window[hh] = temp;
+
+					if (hh <= median)
+						low = ll;
+					if (hh >= median)
+						high = hh - 1;
+				}
+				image.grid[(y - radius) * image.cols + (x - radius)] = window[median];
+				delete[] window;
+			}
+		}
+	}
+	
 };

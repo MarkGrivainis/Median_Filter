@@ -22,7 +22,7 @@ void Grid::Print()
 	{
 		for (int j = 0; j < cols; ++j)
 		{
-			printf("%-7d", grid[i * cols + j]);
+			printf("%-8d", grid[i * cols + j]);
 			counter += grid[i * cols + j];
 		}
 		printf("\n");
@@ -38,7 +38,7 @@ void Grid::PrintRange(int x1, int x2, int y1, int y2)
 	{
 		for (int j = x1; j <= x2; ++j)
 		{
-			printf("%-3d", grid[i * cols + j]);
+			printf("%-8d", grid[i * cols + j]);
 			//counter += grid[i * cols + j];
 		}
 		printf("\n");

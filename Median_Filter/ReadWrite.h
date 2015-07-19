@@ -21,9 +21,9 @@ public:
 		FILE *stream;
 		const long num = 100000000;
 		float *list = new float[num];
-		unsigned long filesize;
-		unsigned int  numread = 1, numwritten;
-		int a = 0;
+		long filesize;
+		unsigned int  numread = 1;
+		int readcount = 0;
 		if (fopen_s(&stream, name, "rb") == 0)
 		{
 			if (_fseeki64(stream, 0l, SEEK_END) == 0)
@@ -32,7 +32,7 @@ public:
 				if (filesize == -1)
 					std::cout << "ftell failed" << std::endl;
 				else
-					std::cout << "ftell returned : " << filesize << std::endl;
+					std::cout << "--- # bytes in file \t\t: " << filesize << std::endl;
 				_fseeki64(stream, 0l, SEEK_SET); // to be tidy
 			}
 			else
@@ -63,19 +63,21 @@ public:
 				b_t2 = omp_get_wtime();
 				bin += b_t2 - b_t1;
 
-				a++;
+				readcount++;
 
 			}
 			
-			printf("Time for serial binning: %12.3f sec, checksum=%d (must be %d).\n", bin, grid.Count(), filesize/8);
-			printf("Time for serial reading: %12.3f sec, checksum=%d (must be %d).\n", read, grid.Count(), filesize / 8);
+			printf("--- # floats \t\t\t: %d\n", filesize / 8);
+			printf("--- Time reading \t\t: %-5.5f sec.\n", read);
+			printf("--- Time binning \t\t: %-5.5f sec.\n", bin);
+			printf("--- # of floats binned \t\t: %d\n", grid.Count());
 
 			fclose(stream);
 		}
 		else
 			printf("File could not be opened\n");
 
-		std::cout << "Reads : " << a << std::endl;
+		std::cout << "--- # of reads required \t: " << readcount << std::endl;
 	}
 	static void LoadData_omp(Grid &grid, char* name)
 	{
@@ -83,10 +85,10 @@ public:
 		double read = 0, bin = 0;
 		grid.Clear();
 		FILE *stream;
-		const long num = 50000000;
+		const long num = 100000000;
 		float *list = new float[num];
 		__int64 filesize;
-		unsigned int  numread = 1, numwritten;
+		unsigned int  numread = 1;
 		int readcount = 0;
 		if (fopen_s(&stream, name, "rb") == 0)
 		{
@@ -151,7 +153,7 @@ public:
 		const unsigned int num = 100000000;
 		float *list = new float[num];
 		__int64 filesize;
-		unsigned int  numread = 1, numwritten;
+		unsigned int  numread = 1;
 		int a = 0;
 		//if (fopen_s(&stream, "Points_[5.0e+08]_Noise_[030]_Normal.bin", "rb") == 0)
 		//{
