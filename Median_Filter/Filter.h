@@ -23,6 +23,7 @@ public:
 		}
 	}
 	void m_Filter_zero(Grid &grid, int radius);
+	//bubble sort the entire window
 	static void m_Filter_fullsort(Grid &padded, Grid &image, int radius)
 	{
 			for (int y = radius; y < image.rows + radius; ++y)
@@ -47,6 +48,7 @@ public:
 				}
 			}
 	}
+	//bubble sort for half the window
 	static void m_Filter_half(Grid &padded, Grid &image, const int size)
 	{
 		int radius = (int)(size - 1) / 2;
@@ -87,7 +89,8 @@ public:
 			}
 		}
 	}
-
+	//quick select found on google 
+	//http://blog.teamleadnet.com/2012/07/quick-select-algorithm-find-kth-element.html
 	static void m_Filter_quickselect(Grid &padded, Grid &image, const int size)
 	{
 		int radius = (int)(size - 1) / 2;
@@ -150,6 +153,12 @@ public:
 			}
 		}
 	}
+	/*
+	* This Quickselect routine is based on the algorithm described in
+	* "Numerical recipes in C", Second Edition,
+	* Cambridge University Press, 1992, Section 8.5, ISBN 0-521-43108-5
+	* This code by Nicolas Devillard - 1998. Public domain.
+	*/
 	static void m_Filter_quickselect2(Grid &padded, Grid &image, const int size)
 	{
 		int radius = (int)(size - 1) / 2;

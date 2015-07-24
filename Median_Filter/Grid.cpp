@@ -33,17 +33,14 @@ void Grid::PrintRange(int x1, int x2, int y1, int y2)
 {
 	printf("from : col: %d - %d\n", x1, x2);
 	printf("from : row: %d - %d\n", y1, y2);
-	//long counter = 0;
 	for (int i = y1; i <= y2; i++)
 	{
 		for (int j = x1; j <= x2; ++j)
 		{
 			printf("%-8d", grid[i * cols + j]);
-			//counter += grid[i * cols + j];
 		}
 		printf("\n");
 	}
-	//printf("total = %d\n", counter);
 }
 int Grid::Count()
 {
@@ -51,7 +48,6 @@ int Grid::Count()
 	for (int i = 0; i < rows; i++)
 		for (int j = 0; j < cols; ++j)
 		{
-			//printf("grid [%d][%d] = %d\n", i, j, grid[i][j]);
 			counter += grid[i * cols + j];
 		}
 	return counter;
@@ -74,6 +70,7 @@ void Grid::Add(float x, float y )
 		y_i--;
 	grid[y_i * cols + x_i]++;
 }
+//pads by copying the border values into the padded area
 Grid Grid::Pad(int radius)
 {
 	Grid bordered = Grid(rows + (radius * 2), cols + (radius * 2));
@@ -95,6 +92,7 @@ Grid Grid::Pad(int radius)
 	return bordered;
 	
 }
+//pads with zeros
 Grid Grid::ZeroPad(int radius)
 {
 	Grid bordered = Grid(rows + (radius * 2), cols + (radius * 2));

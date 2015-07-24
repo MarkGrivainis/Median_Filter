@@ -13,7 +13,7 @@ class ReadWrite
 public:
 	ReadWrite();
 	~ReadWrite();
-	static void LoadData_s(Grid &grid, char* name)
+	static int LoadData_s(Grid &grid, char* name)
 	{
 		double r_t1, r_t2, b_t1, b_t2;
 		double read = 0, bin = 0;
@@ -21,7 +21,7 @@ public:
 		FILE *stream;
 		const long num = 100000000;
 		float *list = new float[num];
-		long filesize;
+		__int64 filesize;
 		unsigned int  numread = 1;
 		int readcount = 0;
 		if (fopen_s(&stream, name, "rb") == 0)
@@ -75,11 +75,15 @@ public:
 			fclose(stream);
 		}
 		else
+		{
 			printf("File could not be opened\n");
+			return -1;
+		}
 
 		std::cout << "--- # of reads required \t: " << readcount << std::endl;
+		return 0;
 	}
-	static void LoadData_omp(Grid &grid, char* name)
+	static int LoadData_omp(Grid &grid, char* name)
 	{
 		double r_t1, r_t2, b_t1, b_t2;
 		double read = 0, bin = 0;
@@ -140,92 +144,15 @@ public:
 			fclose(stream);
 		}
 		else
+		{
 			printf("File could not be opened\n");
+			return -1;
+		}
 
 		std::cout << "--- # of reads required \t: " << readcount << std::endl;
+		return 0;
 	}
-	static void LoadData_omp_buffer(Grid &grid, char* name)
-	{
-		double r_t1, r_t2, b_t1, b_t2;
-		double read = 0, bin = 0;
-		grid.Clear();
-		//FILE *stream;
-		const unsigned int num = 100000000;
-		float *list = new float[num];
-		__int64 filesize;
-		unsigned int  numread = 1;
-		int a = 0;
-		//if (fopen_s(&stream, "Points_[5.0e+08]_Noise_[030]_Normal.bin", "rb") == 0)
-		//{
-		FILE *stream = ::fopen(name, "rb");
-		setvbuf(stream, NULL, _IOFBF, num); // large buffer
-			if (_fseeki64(stream, 0l, SEEK_END) == 0)
-			{
-				filesize = _ftelli64(stream);
-				if (filesize == -1)
-					std::cout << "ftell failed" << std::endl;
-				else
-					std::cout << "ftell returned : " << filesize << std::endl;
-				_fseeki64(stream, 0l, SEEK_SET); // to be tidy
-			}
-			else
-			{
-				std::cout << "fseek failed" << std::endl;
-			}
-//			FILE *stream = ::fopen("Points_[5.0e+08]_Noise_[030]_Normal.bin", "rb");
-	//		setvbuf(stream, NULL, _IOFBF, 1024 * 1024 * 32); // large buffer
-			while (true)
-			{
-				r_t1 = omp_get_wtime();
-				numread = fread(list, sizeof(float), num, stream);
-				r_t2 = omp_get_wtime();
-				read += r_t2 - r_t1;
-				if (numread == 0)
-					break;
-				//#pragma omp parallel
-				//{
-				//Grid temp = Grid(grid.rows, grid.cols);
-				//temp.Clear();
-				b_t1 = omp_get_wtime();
-#pragma omp parallel for 
-				for (int i = 0; i < numread; i += 2)
-				{
-					//printf("OpenMP threads: %d\n", omp_get_num_threads());
-					int x_i = (int)floor(list[i] * grid.cols);
-					int y_i = (int)floor(list[i + 1] * grid.rows);
 
-					if (x_i == grid.cols)
-						x_i--;
-					if (y_i == grid.rows)
-						y_i--;
-					int index = y_i * grid.cols + x_i;
-					//#pragma omp critical
-					//++temp.grid[y_i][x_i];
-#pragma omp atomic
-					++grid.grid[index];
-				}
-				b_t2 = omp_get_wtime();
-				bin += b_t2 - b_t1;
-				//#pragma omp critical
-				//				for (int m = 0; m < grid.rows; ++m)
-				//				for (int n = 0; n < grid.cols;++n)
-				//				grid.grid[m][n] += temp.grid[m][n];
-				a++;
-				//}
-			}
-
-			printf("Time for omp_buffered binning: %12.3f sec, checksum=%d (must be %d).\n", bin, grid.Count(), filesize / 8);
-			printf("Time for omp_buffered reading: %12.3f sec, checksum=%d (must be %d).\n", read, grid.Count(), filesize / 8);
-
-			printf("float = %d\n", sizeof(float));
-
-			fclose(stream);
-		//}
-		//else
-		//	printf("File could not be opened\n");
-
-		std::cout << "Reads : " << a << std::endl;
-	}
 	static void WriteData(Grid &grid, char* name)
 	{
 		float addition_x = (1 / (float)grid.cols) / 2;
